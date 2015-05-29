@@ -74,7 +74,7 @@ avr_ioport_write(
 {
 	avr_ioport_t * p = (avr_ioport_t *)param;
 
-	D(if (avr->data[addr] != v) printf("** PORT%c(%02x) = %02x\r\n", p->name, addr, v);)
+	if (avr->data[addr] != v) printf("** PORT%c(%02x) = %02x\r\n", p->name, addr, v);
 	avr_core_watch_write(avr, addr, v);
 	avr_raise_irq(p->io.irq + IOPORT_IRQ_REG_PORT, v);
 	avr_ioport_update_irqs(p);
