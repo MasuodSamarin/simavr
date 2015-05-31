@@ -23,6 +23,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "sim_hex.h"
+#ifdef EMSCRIPTEN
+#include "emscripten.h"
+#endif
 
 // friendly hex dump
 void hdump(const char *w, uint8_t *b, size_t l)
@@ -147,7 +150,14 @@ read_ihex_chunks(
 {
 	if (!fname || !chunks)
 		return -1;
-	FILE * f = fopen(fname, "r");
+	FILE * f = NULL;
+#ifdef EMSCRIPTEN
+	EM_ASM(var fs = require('fs'); fs.readFile(process.argv[6], 'utf8', function(error, hex){fs.writeFileSync('scratch', hex)}););
+	EM_ASM(FS.mkdir('/working'); FS.mount(NODEFS, { root: '.' }, '/working'););
+	f = fopen("/working/scratch","rb");
+#else
+        f = fopen(fname, "r");
+#endif
 	if (!f) {
 		perror(fname);
 		return -1;
