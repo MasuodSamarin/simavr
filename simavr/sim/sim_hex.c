@@ -152,9 +152,7 @@ read_ihex_chunks(
 		return -1;
 	FILE * f = NULL;
 #ifdef EMSCRIPTEN
-	EM_ASM(var fs = require('fs'); fs.readFile(process.argv[6], 'utf8', function(error, hex){fs.writeFileSync('scratch', hex)}););
-	EM_ASM(FS.mkdir('/working'); FS.mount(NODEFS, { root: '.' }, '/working'););
-	f = fopen("/working/scratch","rb");
+	f = fopen("a_Hello.cpp.hex","rb");
 #else
         f = fopen(fname, "r");
 #endif

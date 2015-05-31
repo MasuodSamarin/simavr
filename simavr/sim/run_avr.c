@@ -177,14 +177,26 @@ int main(int argc, char *argv[])
 
 	signal(SIGINT, sig_int);
 	signal(SIGTERM, sig_int);
+}
 
-	for (;;) {
-		int state = avr_run(avr);
+void engineInit()
+{
+	char* args[] = {"node", "run_avr.js", "-f", "16000000", "-m", "atmega328", "a_Hello.cpp.hex"};
+	main(7, args);
+}
+
+int32_t fetchN(int32_t n)
+{
+	int state = cpu_Limbo;
+	for (int i = 0; i < n; i++) {
+		state = avr_run(avr);
 		if ( state == cpu_Done || state == cpu_Crashed)
+                {
+			avr_terminate(avr);
 			break;
+                }
 	}
-	
-	avr_terminate(avr);
+	return state;
 }
 
 void avr_load_firmware(avr_t * avr, elf_firmware_t * firmware)

@@ -24,4 +24,4 @@ SRC := sim/run_avr.c \
        sim/sim_irq.c \
 
 run_avr.js:
-	emcc -O3 $(SRC) -o run_avr.js -I. -Isim
+	emcc --preload-file js/a_Hello.cpp.hex -O3 -s ASM_JS=1 $(SRC) -o run_avr.js -I. -Isim -s EXPORTED_FUNCTIONS="['_main','_engineInit','_fetchN']"
