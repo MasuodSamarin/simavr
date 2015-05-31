@@ -106,7 +106,6 @@ void avr_terminate(avr_t * avr)
 		avr->gdb = NULL;
 	}
 	if (avr->vcd) {
-		avr_vcd_close(avr->vcd);
 		avr->vcd = NULL;
 	}
 	avr_deallocate_ios(avr);
@@ -158,12 +157,8 @@ static void _avr_io_command_write(struct avr_t * avr, avr_io_addr_t addr, uint8_
 	AVR_LOG(avr, LOG_TRACE, "%s %02x\n", __FUNCTION__, v);
 	switch (v) {
 		case SIMAVR_CMD_VCD_START_TRACE:
-			if (avr->vcd)
-				avr_vcd_start(avr->vcd);
 			break;
 		case SIMAVR_CMD_VCD_STOP_TRACE:
-			if (avr->vcd)
-				avr_vcd_stop(avr->vcd);
 			break;
 		case SIMAVR_CMD_UART_LOOPBACK: {
 			avr_irq_t * src = avr_io_getirq(avr, AVR_IOCTL_UART_GETIRQ('0'), UART_IRQ_OUTPUT);
