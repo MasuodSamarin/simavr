@@ -27,6 +27,9 @@
 #include "emscripten.h"
 #endif
 
+extern char* loaded_chunk[4096];
+extern int number_of_chunks;
+
 // friendly hex dump
 void hdump(const char *w, uint8_t *b, size_t l)
 {
@@ -144,32 +147,18 @@ uint8_t * read_ihex_file(const char * fname, uint32_t * dsize, uint32_t * start)
 
 
 int
-read_ihex_chunks(
-		const char * fname,
-		ihex_chunk_p * chunks )
+read_ihex_chunks(ihex_chunk_p * chunks)
 {
-	if (!fname || !chunks)
+	if(!chunks)
 		return -1;
-	FILE * f = NULL;
-#ifdef EMSCRIPTEN
-	f = fopen("a_Hello.cpp.hex","rb");
-#else
-        f = fopen(fname, "r");
-#endif
-	if (!f) {
-		perror(fname);
-		return -1;
-	}
 	uint32_t segment = 0;	// segment address
 	int chunk = 0, max_chunks = 0;
 	*chunks = NULL;
 
-	while (!feof(f)) {
+	while(chunk < number_of_chunks-1) {
 		char line[128];
-		if (!fgets(line, sizeof(line)-1, f))
-			continue;
+		strcpy(line, loaded_chunk[chunk]);
 		if (line[0] != ':') {
-			fprintf(stderr, "AVR: '%s' invalid ihex format (%.4s)\n", fname, line);
 			break;
 		}
 		uint8_t bline[64];
@@ -187,7 +176,6 @@ read_ihex_chunks(
 			chk = 0x100 - chk;
 		}
 		if (chk != bline[len-1]) {
-			fprintf(stderr, "%s: %s, invalid checksum %02x/%02x\n", __FUNCTION__, fname, chk, bline[len-1]);
 			break;
 		}
 		uint32_t addr = 0;
@@ -204,7 +192,6 @@ read_ihex_chunks(
 				segment = ((bline[4] << 8) | bline[5]) << 16;
 				continue;
 			default:
-				fprintf(stderr, "%s: %s, unsupported check type %02x\n", __FUNCTION__, fname, bline[3]);
 				continue;
 		}
 		if (chunk < max_chunks && addr != ((*chunks)[chunk].baseaddr + (*chunks)[chunk].size)) {
@@ -221,7 +208,6 @@ read_ihex_chunks(
 		memcpy((*chunks)[chunk].data + (*chunks)[chunk].size, bline + 4, bline[0]);
 		(*chunks)[chunk].size += bline[0];
 	}
-	fclose(f);
 	return max_chunks;
 }
 

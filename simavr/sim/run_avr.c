@@ -19,6 +19,7 @@
 	along with simavr.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <libgen.h>
@@ -32,12 +33,16 @@
 #include "avr_eeprom.h"
 #include "avr_ioport.h"
 #include "sim_vcd_file.h"
+#include "emscripten.h"
 
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
 
 #include "sim_core_decl.h"
+
+char* loaded_chunk[4096];
+int number_of_chunks = 0;
 
 void display_usage(char * app)
 {
@@ -109,7 +114,7 @@ int main(int argc, char *argv[])
 		} else if (!strcmp(argv[pi], "-ee")) {
 			loadBase = AVR_SEGMENT_OFFSET_EEPROM;
 		} else if (!strcmp(argv[pi], "-ff")) {
-			loadBase = AVR_SEGMENT_OFFSET_FLASH;			
+			loadBase = AVR_SEGMENT_OFFSET_FLASH;
 		} else if (argv[pi][0] != '-') {
 			char * filename = argv[pi];
 			char * suffix = strrchr(filename, '.');
@@ -119,10 +124,9 @@ int main(int argc, char *argv[])
 					exit(1);
 				}
 				ihex_chunk_p chunk = NULL;
-				int cnt = read_ihex_chunks(filename, &chunk);
+				int cnt = read_ihex_chunks(&chunk);
 				if (cnt <= 0) {
-					fprintf(stderr, "%s: Unable to load IHEX file %s\n", 
-						argv[0], argv[pi]);
+					fprintf(stderr, "%s: Unable to load IHEX file %s\n", argv[0], argv[pi]);
 					exit(1);
 				}
 				printf("Loaded %d section of ihex\n", cnt);
@@ -177,6 +181,36 @@ int main(int argc, char *argv[])
 
 	signal(SIGINT, sig_int);
 	signal(SIGTERM, sig_int);
+}
+
+int32_t getValueFromHex(uint8_t* buffer, int32_t size)
+{
+	int32_t value = 0;
+	int32_t cursor = 0;
+	while(size--)
+	{
+		int32_t shift = (1 << size*4);
+		if(buffer[cursor] < ':')
+		{
+			value += (buffer[cursor++] - '0')*shift;
+		}
+		else
+		{
+			value += (buffer[cursor++] - 0x37)*shift;
+		}
+	}
+
+	return value;
+}
+
+void loadPartialProgram(uint8_t* binary)
+{
+	int32_t lineCursor = 0;
+	assert(binary[lineCursor++] == ':');
+	int32_t byteCount = getValueFromHex(&binary[lineCursor], 2)*2;
+	loaded_chunk[number_of_chunks] = (char*)malloc(byteCount+12);
+	memset(loaded_chunk[number_of_chunks], '\0', byteCount+12);
+	memcpy(loaded_chunk[number_of_chunks++], binary, byteCount+11);
 }
 
 void engineInit()
