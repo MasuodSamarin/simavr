@@ -18,9 +18,10 @@
 	You should have received a copy of the GNU General Public License
 	along with simavr.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#include <string.h>
 #include <stdio.h>
 #include "avr_ioport.h"
+#include "emscripten.h"
 
 #define D(_w)
 
@@ -74,7 +75,14 @@ avr_ioport_write(
 {
 	avr_ioport_t * p = (avr_ioport_t *)param;
 
-	if (avr->data[addr] != v) printf("** PORT%c(%02x) = %02x\r\n", p->name, addr, v);
+	const char* ports = "BCDEF";
+	if (avr->data[addr] != v)
+	{
+		//printf("** PORT%c(%02x) = %02x\r\n", p->name, addr, v);
+		char buffer[64];
+		sprintf(buffer, "writePort(%i, %i)", ports-strchr(ports, p->name), v);
+		emscripten_run_script(buffer);
+	}
 	avr_core_watch_write(avr, addr, v);
 	avr_raise_irq(p->io.irq + IOPORT_IRQ_REG_PORT, v);
 	avr_ioport_update_irqs(p);

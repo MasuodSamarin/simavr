@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include "avr_spi.h"
+#include "emscripten.h"
 
 static avr_cycle_count_t avr_spi_raise(struct avr_t * avr, avr_cycle_count_t when, void * param)
 {
@@ -53,7 +54,9 @@ static void avr_spi_write(struct avr_t * avr, avr_io_addr_t addr, uint8_t v, voi
 	if (addr == p->r_spdr) {
 		/* Clear the SPIF bit. See ATmega164/324/644 manual, Section 18.5.2. */
 		avr_regbit_clear(avr, p->spi.raised);
-                printf("SPI %i\n", v);
+		char buffer[64];
+		sprintf(buffer, "writeSPI(%i)", v);
+		emscripten_run_script(buffer);
 		avr_core_watch_write(avr, addr, v);
 		avr_cycle_timer_register_usec(avr, 100, avr_spi_raise, p); // should be speed dependent
 	}

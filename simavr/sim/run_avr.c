@@ -230,6 +230,7 @@ int32_t fetchN(int32_t n)
 			break;
                 }
 	}
+	EM_ASM("refreshUI()");
 	return state;
 }
 
