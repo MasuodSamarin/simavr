@@ -155,9 +155,11 @@ read_ihex_chunks(ihex_chunk_p * chunks)
 	int chunk = 0, max_chunks = 0;
 	*chunks = NULL;
 
-	while(chunk < number_of_chunks-1) {
+	int current = 0;
+	while(current < number_of_chunks) {
 		char line[128];
-		strcpy(line, loaded_chunk[chunk]);
+		memcpy(line, loaded_chunk[current], strlen(loaded_chunk[current])+1);
+		current++;
 		if (line[0] != ':') {
 			break;
 		}
