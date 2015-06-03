@@ -80,7 +80,7 @@ avr_ioport_write(
 	{
 		//printf("** PORT%c(%02x) = %02x\r\n", p->name, addr, v);
 		char buffer[64];
-		sprintf(buffer, "writePort(%i, %i)", ports-strchr(ports, p->name), v);
+		sprintf(buffer, "writePort(%i, %i)", strchr(ports, p->name)-ports, v);
 		emscripten_run_script(buffer);
 	}
 	avr_core_watch_write(avr, addr, v);
