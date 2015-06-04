@@ -21,7 +21,9 @@
 #include <string.h>
 #include <stdio.h>
 #include "avr_ioport.h"
+#ifdef EMSCRIPTEN
 #include "emscripten.h"
+#endif
 
 #define D(_w)
 
@@ -74,14 +76,17 @@ avr_ioport_write(
 		void * param)
 {
 	avr_ioport_t * p = (avr_ioport_t *)param;
-
+#ifdef EMSCRIPTEN
 	const char* ports = "BCDEF";
+#endif
 	if (avr->data[addr] != v)
 	{
 		//printf("** PORT%c(%02x) = %02x\r\n", p->name, addr, v);
+#ifdef EMSCRIPTEN
 		char buffer[64];
 		sprintf(buffer, "writePort(%i, %i)", strchr(ports, p->name)-ports, v);
 		emscripten_run_script(buffer);
+#endif
 	}
 	avr_core_watch_write(avr, addr, v);
 	avr_raise_irq(p->io.irq + IOPORT_IRQ_REG_PORT, v);

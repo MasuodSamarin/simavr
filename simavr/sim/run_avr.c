@@ -33,7 +33,10 @@
 #include "avr_eeprom.h"
 #include "avr_ioport.h"
 #include "sim_vcd_file.h"
+
+#ifdef EMSCRIPTEN
 #include "emscripten.h"
+#endif
 
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -215,7 +218,7 @@ void loadPartialProgram(uint8_t* binary)
 
 void engineInit()
 {
-	char* args[] = {"node", "run_avr.js", "-f", "16000000", "-m", "atmega328", "a_Hello.cpp.hex"};
+	char* args[] = {"node", "run_avr.js", "-f", "16000000", "-m", "atmega32u4", "a_Hello.cpp.hex"};
 	main(7, args);
 }
 
@@ -230,7 +233,14 @@ int32_t fetchN(int32_t n)
 			break;
                 }
 	}
+
+	//PLL CSR initialization
+	uint8_t v = avr_core_watch_read(avr, 0x49);
+	v = 0 < (v & 0x2) ? v | 0x1 : v & 0xFE;
+	avr_core_watch_write(avr, 0x49, v);
+#ifdef EMSCRIPTEN
 	EM_ASM("refreshUI()");
+#endif
 	return state;
 }
 

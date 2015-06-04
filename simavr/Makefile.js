@@ -19,6 +19,7 @@ SRC := sim/run_avr.c \
        sim/avr_usb.c \
        sim/avr_watchdog.c \
        cores/sim_mega328.c \
+       cores/sim_mega32u4.c \
        cores/sim_megax8.c \
        sim/sim_io.c \
        sim/sim_irq.c \

@@ -49,7 +49,6 @@
 #ifndef _AVR_IOM32U4_H_
 #define _AVR_IOM32U4_H_ 1
 
-
 /* Registers and associated bit numbers */
 
 #define PINB _SFR_IO8(0x03)
