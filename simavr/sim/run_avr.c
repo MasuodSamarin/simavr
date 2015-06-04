@@ -234,6 +234,11 @@ int32_t fetchN(int32_t n)
 	return state;
 }
 
+void buttonHit(int r, int v)
+{
+	avr_core_watch_write(avr, r, v);
+}
+
 void avr_load_firmware(avr_t * avr, elf_firmware_t * firmware)
 {
 	if (firmware->frequency)
