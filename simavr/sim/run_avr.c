@@ -77,115 +77,6 @@ sig_int(
 	exit(0);
 }
 
-int main(int argc, char *argv[])
-{
-	elf_firmware_t f = {{0}};
-	long f_cpu = 0;
-	int trace = 0;
-	int gdb = 0;
-	int log = 1;
-	char name[16] = "";
-	uint32_t loadBase = AVR_SEGMENT_OFFSET_FLASH;
-	int trace_vectors[8] = {0};
-	int trace_vectors_count = 0;
-
-	if (argc == 1)
-		display_usage(basename(argv[0]));
-
-	for (int pi = 1; pi < argc; pi++) {
-		if (!strcmp(argv[pi], "-h") || !strcmp(argv[pi], "-help")) {
-			display_usage(basename(argv[0]));
-		} else if (!strcmp(argv[pi], "-m") || !strcmp(argv[pi], "-mcu")) {
-			if (pi < argc-1)
-				strcpy(name, argv[++pi]);
-			else
-				display_usage(basename(argv[0]));
-		} else if (!strcmp(argv[pi], "-f") || !strcmp(argv[pi], "-freq")) {
-			if (pi < argc-1)
-				f_cpu = atoi(argv[++pi]);
-			else
-				display_usage(basename(argv[0]));
-		} else if (!strcmp(argv[pi], "-t") || !strcmp(argv[pi], "-trace")) {
-			trace++;
-		} else if (!strcmp(argv[pi], "-ti")) {
-			if (pi < argc-1)
-				trace_vectors[trace_vectors_count++] = atoi(argv[++pi]);
-		} else if (!strcmp(argv[pi], "-g") || !strcmp(argv[pi], "-gdb")) {
-			gdb++;
-		} else if (!strcmp(argv[pi], "-v")) {
-			log++;
-		} else if (!strcmp(argv[pi], "-ee")) {
-			loadBase = AVR_SEGMENT_OFFSET_EEPROM;
-		} else if (!strcmp(argv[pi], "-ff")) {
-			loadBase = AVR_SEGMENT_OFFSET_FLASH;
-		} else if (argv[pi][0] != '-') {
-			char * filename = argv[pi];
-			char * suffix = strrchr(filename, '.');
-			if (suffix && !strcasecmp(suffix, ".hex")) {
-				if (!name[0] || !f_cpu) {
-					fprintf(stderr, "%s: -mcu and -freq are mandatory to load .hex files\n", argv[0]);
-					exit(1);
-				}
-				ihex_chunk_p chunk = NULL;
-				int cnt = read_ihex_chunks(&chunk);
-				if (cnt <= 0) {
-					fprintf(stderr, "%s: Unable to load IHEX file %s\n", argv[0], argv[pi]);
-					exit(1);
-				}
-				printf("Loaded %d section of ihex\n", cnt);
-				for (int ci = 0; ci < cnt; ci++) {
-					if (chunk[ci].baseaddr < (1*1024*1024)) {
-						f.flash = chunk[ci].data;
-						f.flashsize = chunk[ci].size;
-						f.flashbase = chunk[ci].baseaddr;
-						printf("Load HEX flash %08x, %d\n", f.flashbase, f.flashsize);
-					} else if (chunk[ci].baseaddr >= AVR_SEGMENT_OFFSET_EEPROM ||
-							chunk[ci].baseaddr + loadBase >= AVR_SEGMENT_OFFSET_EEPROM) {
-						// eeprom!
-						f.eeprom = chunk[ci].data;
-						f.eesize = chunk[ci].size;
-						printf("Load HEX eeprom %08x, %d\n", chunk[ci].baseaddr, f.eesize);
-					}
-				}
-			}
-		}
-	}
-
-	if (strlen(name))
-		strcpy(f.mmcu, name);
-	if (f_cpu)
-		f.frequency = f_cpu;
-
-	avr = avr_make_mcu_by_name(f.mmcu);
-	if (!avr) {
-		fprintf(stderr, "%s: AVR '%s' not known\n", argv[0], f.mmcu);
-		exit(1);
-	}
-	avr_init(avr);
-	avr_load_firmware(avr, &f);
-	if (f.flashbase) {
-		printf("Attempted to load a bootloader at %04x\n", f.flashbase);
-		avr->pc = f.flashbase;
-	}
-	avr->log = (log > LOG_TRACE ? LOG_TRACE : log);
-	avr->trace = trace;
-	for (int ti = 0; ti < trace_vectors_count; ti++) {
-		for (int vi = 0; vi < avr->interrupts.vector_count; vi++)
-			if (avr->interrupts.vector[vi]->vector == trace_vectors[ti])
-				avr->interrupts.vector[vi]->trace = 1;
-	}
-
-	// even if not setup at startup, activate gdb if crashing
-	avr->gdb_port = 1234;
-	if (gdb) {
-		avr->state = cpu_Stopped;
-		avr_gdb_init(avr);
-	}
-
-	signal(SIGINT, sig_int);
-	signal(SIGTERM, sig_int);
-}
-
 int32_t getValueFromHex(uint8_t* buffer, int32_t size)
 {
 	int32_t value = 0;
@@ -216,10 +107,57 @@ void loadPartialProgram(uint8_t* binary)
 	memcpy(loaded_chunk[number_of_chunks++], binary, byteCount+11);
 }
 
-void engineInit()
+void engineInit(const char* m)
 {
-	char* args[] = {"node", "run_avr.js", "-f", "16000000", "-m", "atmega32u4", "a_Hello.cpp.hex"};
-	main(7, args);
+	elf_firmware_t f = {{0}};
+	long f_cpu = 16000000;
+	int log = 1;
+	char name[16];
+	strcpy(name, m);
+	uint32_t loadBase = AVR_SEGMENT_OFFSET_FLASH;
+
+	ihex_chunk_p chunk = NULL;
+	int cnt = read_ihex_chunks(&chunk);
+	if (cnt <= 0) {
+		fprintf(stderr, "Unable to load IHEX file\n");
+		exit(1);
+	}
+	printf("Loaded %d section of ihex\n", cnt);
+	for (int ci = 0; ci < cnt; ci++) {
+		if (chunk[ci].baseaddr < (1*1024*1024)) {
+		f.flash = chunk[ci].data;
+		f.flashsize = chunk[ci].size;
+		f.flashbase = chunk[ci].baseaddr;
+		printf("Load HEX flash %08x, %d\n", f.flashbase, f.flashsize);
+		} else if (chunk[ci].baseaddr >= AVR_SEGMENT_OFFSET_EEPROM ||
+			chunk[ci].baseaddr + loadBase >= AVR_SEGMENT_OFFSET_EEPROM) {
+				// eeprom!
+				f.eeprom = chunk[ci].data;
+				f.eesize = chunk[ci].size;
+				printf("Load HEX eeprom %08x, %d\n", chunk[ci].baseaddr, f.eesize);
+		}
+	}
+
+	if (strlen(name))
+		strcpy(f.mmcu, name);
+	if (f_cpu)
+		f.frequency = f_cpu;
+
+	avr = avr_make_mcu_by_name(f.mmcu);
+	if (!avr) {
+		fprintf(stderr, "AVR '%s' not known\n", f.mmcu);
+		exit(1);
+	}
+	avr_init(avr);
+	avr_load_firmware(avr, &f);
+	if (f.flashbase) {
+		printf("Attempted to load a bootloader at %04x\n", f.flashbase);
+		avr->pc = f.flashbase;
+	}
+	avr->log = (log > LOG_TRACE ? LOG_TRACE : log);
+
+	signal(SIGINT, sig_int);
+	signal(SIGTERM, sig_int);
 }
 
 int32_t fetchN(int32_t n)
