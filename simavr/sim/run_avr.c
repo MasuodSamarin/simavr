@@ -179,6 +179,11 @@ int32_t fetchN(int32_t n)
 #ifdef EMSCRIPTEN
 	EM_ASM("refreshUI()");
 #endif
+	avr_core_watch_write(avr, 0x23, 0xFF);
+	avr_core_watch_write(avr, 0x26, 0xFF);
+	avr_core_watch_write(avr, 0x29, 0xFF);
+	avr_core_watch_write(avr, 0x2F, 0xFF);
+
 	return state;
 }
 
