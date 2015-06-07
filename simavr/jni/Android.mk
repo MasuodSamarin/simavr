@@ -30,5 +30,6 @@ LOCAL_SRC_FILES := ../sim/run_avr.c \
        ../cores/sim_megax8.c \
        ../sim/sim_io.c \
        ../sim/sim_irq.c \
+       ../sim/sim_jni.cpp \
 
 include $(BUILD_SHARED_LIBRARY)
