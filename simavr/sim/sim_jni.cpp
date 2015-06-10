@@ -20,15 +20,15 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
 }
 
 JNIEXPORT void JNICALL
-Java_org_starlo_boardmicro_NativeInterface_loadPartialProgram(JNIEnv *, jobject, jstring)
+Java_org_starlo_boardmicro_NativeInterface_loadPartialProgram(JNIEnv* env, jobject, jstring hex)
 {
-	//loadPartialProgram("");
+	loadPartialProgram((uint8_t*)env->GetStringUTFChars(hex, NULL));
 }
 
 JNIEXPORT void JNICALL
-Java_org_starlo_boardmicro_NativeInterface_engineInit(JNIEnv *, jobject, jstring)
+Java_org_starlo_boardmicro_NativeInterface_engineInit(JNIEnv* env, jobject, jstring target)
 {
-	engineInit("");
+	engineInit(env->GetStringUTFChars(target, NULL));
 }
 
 JNIEXPORT jint JNICALL
