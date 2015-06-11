@@ -19,6 +19,8 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
 	return JNI_VERSION_1_6;
 }
 
+jmethodID writePort = NULL;
+
 JNIEXPORT void JNICALL
 Java_org_starlo_boardmicro_NativeInterface_loadPartialProgram(JNIEnv* env, jobject, jstring hex)
 {
@@ -26,14 +28,16 @@ Java_org_starlo_boardmicro_NativeInterface_loadPartialProgram(JNIEnv* env, jobje
 }
 
 JNIEXPORT void JNICALL
-Java_org_starlo_boardmicro_NativeInterface_engineInit(JNIEnv* env, jobject, jstring target)
+Java_org_starlo_boardmicro_NativeInterface_engineInit(JNIEnv* env, jobject obj, jstring target)
 {
+	writePort = env->GetMethodID(env->GetObjectClass(obj), "writePort", "(IB)V");
 	engineInit(env->GetStringUTFChars(target, NULL));
 }
 
 JNIEXPORT jint JNICALL
-Java_org_starlo_boardmicro_NativeInterface_fetchN(JNIEnv *, jobject, jint n)
+Java_org_starlo_boardmicro_NativeInterface_fetchN(JNIEnv* env, jobject obj, jint n)
 {
+	env->CallVoidMethod(obj, writePort, 0, 0xFF);
 	return fetchN(n);
 }
 
