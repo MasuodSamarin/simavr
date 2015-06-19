@@ -23,6 +23,12 @@
 #include "avr_ioport.h"
 #ifdef EMSCRIPTEN
 #include "emscripten.h"
+#else
+extern uint8_t bState;
+extern uint8_t cState;
+extern uint8_t dState;
+extern uint8_t eState;
+extern uint8_t fState;
 #endif
 
 #define D(_w)
@@ -76,16 +82,34 @@ avr_ioport_write(
 		void * param)
 {
 	avr_ioport_t * p = (avr_ioport_t *)param;
-#ifdef EMSCRIPTEN
 	const char* ports = "BCDEF";
-#endif
 	if (avr->data[addr] != v)
 	{
 		//printf("** PORT%c(%02x) = %02x\r\n", p->name, addr, v);
+		int port = strchr(ports, p->name)-ports;
 #ifdef EMSCRIPTEN
 		char buffer[64];
-		sprintf(buffer, "writePort(%i, %i)", strchr(ports, p->name)-ports, v);
+		sprintf(buffer, "writePort(%i, %i)", port, v);
 		emscripten_run_script(buffer);
+#else
+		switch(port)
+		{
+			case 0:
+				bState = v;
+				break;
+			case 1:
+				cState = v;
+				break;
+			case 2:
+				dState = v;
+				break;
+			case 3:
+				eState = v;
+				break;
+			case 4:
+				fState = v;
+				break;
+		}
 #endif
 	}
 	avr_core_watch_write(avr, addr, v);
