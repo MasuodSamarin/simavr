@@ -34,21 +34,21 @@ Java_org_starlo_boardmicro_NativeInterface_loadPartialProgram(JNIEnv* env, jobje
 	loadPartialProgram((uint8_t*)env->GetStringUTFChars(hex, NULL));
 }
 
-JNIEnv* gEnv = NULL;
-jobject gObj;
 JNIEXPORT void JNICALL
 Java_org_starlo_boardmicro_NativeInterface_engineInit(JNIEnv* env, jobject obj, jstring target)
 {
-	gEnv = env;
-	gObj = obj;
 	writePort = env->GetMethodID(env->GetObjectClass(obj), "writePort", "(IB)V");
 	writeSPI = env->GetMethodID(env->GetObjectClass(obj), "writeSPI", "(I)V");
 	engineInit(env->GetStringUTFChars(target, NULL));
 }
 
+jobject gObj;
+JNIEnv* gEnv = NULL;
 JNIEXPORT jint JNICALL
 Java_org_starlo_boardmicro_NativeInterface_fetchN(JNIEnv* env, jobject obj, jint n)
 {
+	gEnv = env;
+	gObj = obj;
 	int32_t state = fetchN(n);
 	refreshUI(env, obj);
 	return state;
