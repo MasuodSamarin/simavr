@@ -1,5 +1,7 @@
 #include <jni.h>
 #include <stdint.h>
+#include <string>
+#include <string.h>
 #include <deque>
 
 extern "C"
@@ -20,6 +22,8 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
 
 	return JNI_VERSION_1_6;
 }
+
+#define NUMBER_OF_PORTS 5
 
 uint8_t bState = 0x0;
 uint8_t cState = 0x0;
@@ -78,11 +82,39 @@ void refreshUI(JNIEnv* env, jobject obj)
 }
 ]
 */
+	char buffer[32];
+	memset(buffer, '\0', 32);
+	std::string spiString;
+	const char* portNames[NUMBER_OF_PORTS] = {"bState", "cState", "dState", "eState", "fState"};
+	spiString.append("[\n");
 	while(spiDeque.size() > 0)
 	{
+		spiString.append("{\n\"ports\":{\n");
 		spiWrite call = spiDeque.front();
+		int i = NUMBER_OF_PORTS-1;
+		while(i--)
+		{
+			sprintf(buffer, "\"%s\": \"%i\",\n", portNames[i], call.ports[i]);
+			spiString.append(buffer);
+			memset(buffer, '\0', 32);
+		}
+		sprintf(buffer, "\"%s\": \"%i\"\n", portNames[NUMBER_OF_PORTS-1], call.ports[NUMBER_OF_PORTS-1]);
+		spiString.append(buffer);
+		memset(buffer, '\0', 32);
+		spiString.append("},\n");
+		sprintf(buffer, "\"spi\": \"%i\"\n", call.spi);
+		spiString.append(buffer);
+		if(spiDeque.size() != 1)
+		{
+			spiString.append("},\n");
+		}
+		else
+		{
+			spiString.append("}\n");
+		}
 		spiDeque.pop_front();
 	}
+	spiString.append("]\n");
 	env->CallVoidMethod(obj, writePort, 0, bState);
 	env->CallVoidMethod(obj, writePort, 1, cState);
 	env->CallVoidMethod(obj, writePort, 2, dState);
