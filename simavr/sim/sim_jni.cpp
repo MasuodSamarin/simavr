@@ -1,5 +1,6 @@
 #include <jni.h>
 #include <stdint.h>
+#include <deque>
 
 extern "C"
 {
@@ -54,8 +55,34 @@ Java_org_starlo_boardmicro_NativeInterface_fetchN(JNIEnv* env, jobject obj, jint
 	return state;
 }
 
+struct spiWrite
+{
+	uint8_t ports[5];
+	uint8_t spi;
+};
+
+std::deque<spiWrite> spiDeque;
 void refreshUI(JNIEnv* env, jobject obj)
 {
+/*
+[
+{
+  "ports": {
+    "bstate": "0",
+    "cstate": "0",
+    "dstate": "0",
+    "estate": "0",
+    "fstate": "0"
+  },
+  "spi":"0"
+}
+]
+*/
+	while(spiDeque.size() > 0)
+	{
+		spiWrite call = spiDeque.front();
+		spiDeque.pop_front();
+	}
 	env->CallVoidMethod(obj, writePort, 0, bState);
 	env->CallVoidMethod(obj, writePort, 1, cState);
 	env->CallVoidMethod(obj, writePort, 2, dState);
@@ -65,6 +92,15 @@ void refreshUI(JNIEnv* env, jobject obj)
 
 void jniWriteSPI(uint8_t value)
 {
+	spiWrite call;
+	call.ports[0] = bState;
+	call.ports[1] = cState;
+	call.ports[2] = dState;
+	call.ports[3] = eState;
+	call.ports[4] = fState;
+	call.spi = value;
+	spiDeque.push_back(call);
+
 	refreshUI(gEnv, gObj);
 	gEnv->CallVoidMethod(gObj, writeSPI, value);
 }
