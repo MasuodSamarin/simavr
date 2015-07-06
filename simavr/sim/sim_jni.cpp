@@ -32,6 +32,7 @@ uint8_t eState = 0x0;
 uint8_t fState = 0x0;
 jmethodID writePort = NULL;
 jmethodID writeSPI = NULL;
+jmethodID writeSPI2 = NULL;
 
 JNIEXPORT void JNICALL
 Java_org_starlo_boardmicro_NativeInterface_loadPartialProgram(JNIEnv* env, jobject, jstring hex)
@@ -44,6 +45,7 @@ Java_org_starlo_boardmicro_NativeInterface_engineInit(JNIEnv* env, jobject obj, 
 {
 	writePort = env->GetMethodID(env->GetObjectClass(obj), "writePort", "(IB)V");
 	writeSPI = env->GetMethodID(env->GetObjectClass(obj), "writeSPI", "(I)V");
+	writeSPI2 = env->GetMethodID(env->GetObjectClass(obj), "writeSPI", "(Ljava/lang/String;)V");
 	engineInit(env->GetStringUTFChars(target, NULL));
 }
 
@@ -120,6 +122,9 @@ void refreshUI(JNIEnv* env, jobject obj)
 	env->CallVoidMethod(obj, writePort, 2, dState);
 	env->CallVoidMethod(obj, writePort, 3, eState);
 	env->CallVoidMethod(obj, writePort, 4, fState);
+	jstring spi = env->NewStringUTF(spiString.c_str());
+	env->CallVoidMethod(obj, writeSPI2, spi);
+	env->DeleteLocalRef(spi);
 }
 
 void jniWriteSPI(uint8_t value)
