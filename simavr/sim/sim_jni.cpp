@@ -32,7 +32,6 @@ uint8_t eState = 0x0;
 uint8_t fState = 0x0;
 jmethodID writePort = NULL;
 jmethodID writeSPI = NULL;
-jmethodID writeSPI2 = NULL;
 
 JNIEXPORT void JNICALL
 Java_org_starlo_boardmicro_NativeInterface_loadPartialProgram(JNIEnv* env, jobject, jstring hex)
@@ -44,18 +43,13 @@ JNIEXPORT void JNICALL
 Java_org_starlo_boardmicro_NativeInterface_engineInit(JNIEnv* env, jobject obj, jstring target)
 {
 	writePort = env->GetMethodID(env->GetObjectClass(obj), "writePort", "(IB)V");
-	writeSPI = env->GetMethodID(env->GetObjectClass(obj), "writeSPI", "(I)V");
-	writeSPI2 = env->GetMethodID(env->GetObjectClass(obj), "writeSPI", "(Ljava/lang/String;)V");
+	writeSPI = env->GetMethodID(env->GetObjectClass(obj), "writeSPI", "(Ljava/lang/String;)V");
 	engineInit(env->GetStringUTFChars(target, NULL));
 }
 
-jobject gObj;
-JNIEnv* gEnv = NULL;
 JNIEXPORT jint JNICALL
 Java_org_starlo_boardmicro_NativeInterface_fetchN(JNIEnv* env, jobject obj, jint n)
 {
-	gEnv = env;
-	gObj = obj;
 	int32_t state = fetchN(n);
 	refreshUI(env, obj);
 	return state;
@@ -117,14 +111,15 @@ void refreshUI(JNIEnv* env, jobject obj)
 		spiDeque.pop_front();
 	}
 	spiString.append("]\n");
+	jstring spi = env->NewStringUTF(spiString.c_str());
+	env->CallVoidMethod(obj, writeSPI, spi);
+	env->DeleteLocalRef(spi);
+
 	env->CallVoidMethod(obj, writePort, 0, bState);
 	env->CallVoidMethod(obj, writePort, 1, cState);
 	env->CallVoidMethod(obj, writePort, 2, dState);
 	env->CallVoidMethod(obj, writePort, 3, eState);
 	env->CallVoidMethod(obj, writePort, 4, fState);
-	jstring spi = env->NewStringUTF(spiString.c_str());
-	env->CallVoidMethod(obj, writeSPI2, spi);
-	env->DeleteLocalRef(spi);
 }
 
 void jniWriteSPI(uint8_t value)
@@ -137,9 +132,6 @@ void jniWriteSPI(uint8_t value)
 	call.ports[4] = fState;
 	call.spi = value;
 	spiDeque.push_back(call);
-
-	refreshUI(gEnv, gObj);
-	gEnv->CallVoidMethod(gObj, writeSPI, value);
 }
 
 }
