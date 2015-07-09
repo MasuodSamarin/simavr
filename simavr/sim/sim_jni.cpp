@@ -7,6 +7,7 @@
 extern "C"
 {
 
+void buttonHit(int32_t r, int32_t v);
 void loadPartialProgram(uint8_t* binary);
 void engineInit(const char* m);
 int32_t fetchN(int32_t n);
@@ -47,6 +48,12 @@ Java_org_starlo_boardmicro_NativeInterface_engineInit(JNIEnv* env, jobject obj, 
 	engineInit(env->GetStringUTFChars(target, NULL));
 }
 
+JNIEXPORT void JNICALL
+Java_org_starlo_boardmicro_NativeInterface_buttonHit(JNIEnv* env, jobject obj, jint r, jint v)
+{
+	buttonHit(r, v);
+}
+
 JNIEXPORT jint JNICALL
 Java_org_starlo_boardmicro_NativeInterface_fetchN(JNIEnv* env, jobject obj, jint n)
 {
@@ -67,25 +74,25 @@ void refreshUI(JNIEnv* env, jobject obj)
 /*
 [
 {
-  "ports": {
-    "bstate": "0",
-    "cstate": "0",
-    "dstate": "0",
-    "estate": "0",
-    "fstate": "0"
+  "p": {
+    "b": "0",
+    "c": "0",
+    "d": "0",
+    "e": "0",
+    "f": "0"
   },
-  "spi":"0"
+  "s":"0"
 }
 ]
 */
 	char buffer[32];
 	memset(buffer, '\0', 32);
 	std::string spiString;
-	const char* portNames[NUMBER_OF_PORTS] = {"bState", "cState", "dState", "eState", "fState"};
+	const char* portNames[NUMBER_OF_PORTS] = {"b", "c", "d", "e", "f"};
 	spiString.append("[\n");
 	while(spiDeque.size() > 0)
 	{
-		spiString.append("{\n\"ports\":{\n");
+		spiString.append("{\n\"p\":{\n");
 		spiWrite call = spiDeque.front();
 		int i = NUMBER_OF_PORTS-1;
 		while(i--)
@@ -98,7 +105,7 @@ void refreshUI(JNIEnv* env, jobject obj)
 		spiString.append(buffer);
 		memset(buffer, '\0', 32);
 		spiString.append("},\n");
-		sprintf(buffer, "\"spi\": \"%i\"\n", call.spi);
+		sprintf(buffer, "\"s\": \"%i\"\n", call.spi);
 		spiString.append(buffer);
 		if(spiDeque.size() != 1)
 		{
