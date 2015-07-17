@@ -110,7 +110,7 @@ void loadPartialProgram(uint8_t* binary)
 void engineInit(const char* m)
 {
 	elf_firmware_t f = {{0}};
-	long f_cpu = 16000000;
+	long f_cpu = 5000000;
 	int log = 1;
 	char name[16];
 	strcpy(name, m);
