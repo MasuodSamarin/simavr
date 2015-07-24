@@ -25,6 +25,8 @@ LOCAL_SRC_FILES := ../sim/run_avr.c \
        ../sim/avr_uart.c \
        ../sim/avr_usb.c \
        ../sim/avr_watchdog.c \
+       ../cores/sim_tinyx5.c \
+       ../cores/sim_tiny85.c \
        ../cores/sim_mega328.c \
        ../cores/sim_mega32u4.c \
        ../cores/sim_megax8.c \
