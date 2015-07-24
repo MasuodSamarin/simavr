@@ -27,4 +27,4 @@ SRC := sim/run_avr.c \
        sim/sim_irq.c \
 
 run_avr.js:
-	emcc -O3 -s ASM_JS=1 $(SRC) -o run_avr.js -I. -Isim -s EXPORTED_FUNCTIONS="['_loadPartialProgram','_engineInit','_fetchN', '_buttonHit']"
+	emcc -O3 --memory-init-file 0 -s ASM_JS=1 $(SRC) -o run_avr.js -I. -Isim -s EXPORTED_FUNCTIONS="['_loadPartialProgram','_engineInit','_fetchN', '_buttonHit']"
