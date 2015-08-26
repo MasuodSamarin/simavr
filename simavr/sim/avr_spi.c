@@ -23,9 +23,9 @@
 #include "avr_spi.h"
 #ifdef EMSCRIPTEN
 #include "emscripten.h"
-#endif
-
+#elif ANDROID
 void jniWriteSPI(uint8_t value);
+#endif
 
 static avr_cycle_count_t avr_spi_raise(struct avr_t * avr, avr_cycle_count_t when, void * param)
 {
@@ -62,7 +62,7 @@ static void avr_spi_write(struct avr_t * avr, avr_io_addr_t addr, uint8_t v, voi
 		char buffer[64];
 		sprintf(buffer, "writeSPI(%i)", v);
 		emscripten_run_script(buffer);
-#else
+#elif ANDROID
 		jniWriteSPI(v);
 #endif
 		avr_core_watch_write(avr, addr, v);
