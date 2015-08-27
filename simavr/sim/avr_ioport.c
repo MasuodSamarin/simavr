@@ -23,7 +23,7 @@
 #include "avr_ioport.h"
 #ifdef EMSCRIPTEN
 #include "emscripten.h"
-#elif ANDROID
+#else
 extern uint8_t bState;
 extern uint8_t cState;
 extern uint8_t dState;
@@ -91,7 +91,7 @@ avr_ioport_write(
 		char buffer[64];
 		sprintf(buffer, "writePort(%i, %i)", port, v);
 		emscripten_run_script(buffer);
-#elif ANDROID
+#else
 		switch(port)
 		{
 			case 0:
@@ -110,8 +110,6 @@ avr_ioport_write(
 				fState = v;
 				break;
 		}
-#else
-		printf("Port %d", port);
 #endif
 	}
 	avr_core_watch_write(avr, addr, v);

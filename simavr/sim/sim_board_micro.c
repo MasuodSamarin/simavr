@@ -13,8 +13,16 @@
 #include "avr_ioport.h"
 #include "sim_vcd_file.h"
 
+#include "sim_board_micro.h"
+
 #ifdef EMSCRIPTEN
 #include "emscripten.h"
+#else
+uint8_t bState = 0x0;
+uint8_t cState = 0x0;
+uint8_t dState = 0x0;
+uint8_t eState = 0x0;
+uint8_t fState = 0x0;
 #endif
 
 #include "sim_core_decl.h"
@@ -250,6 +258,29 @@ void avr_load_firmware(avr_t * avr, elf_firmware_t * firmware)
 					sprintf(comp, "%s.%d", firmware->trace[ti].name, bi);
 				}
 		}
+	}
+}
+#else
+
+void (*writeSPI)(struct spiWrite call) = NULL;
+
+void setSPICallback(void (*callback)(struct spiWrite call))
+{
+	writeSPI = callback;
+}
+
+void nativeWriteSPI(uint8_t value)
+{
+	struct spiWrite call;
+	call.ports[0] = bState;
+	call.ports[1] = cState;
+	call.ports[2] = dState;
+	call.ports[3] = eState;
+	call.ports[4] = fState;
+	call.spi = value;
+	if(writeSPI != NULL)
+	{
+		writeSPI(call);
 	}
 }
 

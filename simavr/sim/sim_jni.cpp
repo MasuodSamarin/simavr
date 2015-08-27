@@ -4,6 +4,8 @@
 #include <string.h>
 #include <deque>
 
+#include "sim_board_micro.h"
+
 extern "C"
 {
 
@@ -26,11 +28,11 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
 
 #define NUMBER_OF_PORTS 5
 
-uint8_t bState = 0x0;
-uint8_t cState = 0x0;
-uint8_t dState = 0x0;
-uint8_t eState = 0x0;
-uint8_t fState = 0x0;
+extern uint8_t bState;
+extern uint8_t cState;
+extern uint8_t dState;
+extern uint8_t eState;
+extern uint8_t fState;
 jmethodID writePort = NULL;
 jmethodID writeSPI = NULL;
 
@@ -61,12 +63,6 @@ Java_org_starlo_boardmicro_NativeInterface_fetchN(JNIEnv* env, jobject obj, jint
 	refreshUI(env, obj);
 	return state;
 }
-
-struct spiWrite
-{
-	uint8_t ports[5];
-	uint8_t spi;
-};
 
 std::deque<spiWrite> spiDeque;
 void refreshUI(JNIEnv* env, jobject obj)
