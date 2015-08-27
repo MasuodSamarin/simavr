@@ -1,5 +1,4 @@
-SRC := sim/run_avr.c \
-       sim/sim_avr.c \
+SRC := sim/sim_avr.c \
        sim/sim_hex.c \
        sim/sim_core.c \
        sim/sim_cycle_timers.c \

@@ -5,8 +5,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := run_avr
 LOCAL_CFLAGS += -std=c99
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../ $(LOCAL_PATH)/../sim
-LOCAL_SRC_FILES := ../sim/run_avr.c \
-       ../sim/sim_avr.c \
+LOCAL_SRC_FILES := ../sim/sim_avr.c \
        ../sim/sim_hex.c \
        ../sim/sim_core.c \
        ../sim/sim_cycle_timers.c \
