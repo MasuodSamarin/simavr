@@ -269,6 +269,19 @@ void setSPICallback(void (*callback)(struct spiWrite call))
 	writeSPI = callback;
 }
 
+void (*SharpSPI)(uint8_t, uint8_t) = NULL;
+
+static void flatten(struct spiWrite call)
+{
+	SharpSPI(call.ports[2], call.spi);
+}
+
+void SharpCallback(void (*callback)(uint8_t, uint8_t))
+{
+	writeSPI = flatten;
+	SharpSPI = callback;
+}
+
 void nativeWriteSPI(uint8_t value)
 {
 	struct spiWrite call;
